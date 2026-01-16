@@ -9,7 +9,7 @@ import { authClient } from './lib/auth';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <NeonAuthUIProvider emailOTP authClient={authClient}>
+    <NeonAuthUIProvider authClient={authClient}>
       <BrowserRouter>
         <App />
       </BrowserRouter>

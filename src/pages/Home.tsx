@@ -283,6 +283,7 @@ function SentTab({ userId }: { userId: string }) {
 
 export function Home() {
     const [userId, setUserId] = useState('');
+    const [fullName, setFullName] = useState('');
     const [synced, setSynced] = useState(false);
 
     {/* Load user ID on mount */ }
@@ -293,6 +294,7 @@ export function Home() {
                 const user = (session?.data as any)?.user;
                 if (user?.id) {
                     setUserId(user.id);
+                    setFullName(user.user_metadata?.full_name || user.name || '');
                 }
             } catch (err) {
                 console.error(err);
@@ -308,7 +310,7 @@ export function Home() {
                 try {
                     await apiRequest('/users/sync', userId, {
                         method: 'POST',
-                        body: JSON.stringify({ userId, email: userId, full_name: '' }),
+                        body: JSON.stringify({ userId, email: userId, full_name: fullName }),
                     });
                     setSynced(true);
                 } catch (err) {
@@ -317,7 +319,7 @@ export function Home() {
             }
         };
         syncUser();
-    }, [userId, synced]);
+    }, [userId, synced, fullName]);
 
     return (
         <>
