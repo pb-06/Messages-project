@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { authClient } from '../lib/auth';
-import { Mail, Trash2, Shield } from 'lucide-react';
+import { Trash2, Shield } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
