@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 
 import { RedirectToSignIn, SignedIn, UserButton } from '@neondatabase/neon-js/auth/react/ui';
 import { authClient } from '../lib/auth';
-import { Mail, Inbox, Trash2 } from 'lucide-react';
+import { Mail, Inbox, Trash2, Send } from 'lucide-react';
 
 import { Dialog, DialogClose, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from "@/components/ui/dialog"
 import { Card, CardAction, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
@@ -205,6 +205,82 @@ function InboxTab({ userId }: { userId: string }) {
     );
 }
 
+function SentTab({ userId }: { userId: string }) {
+    const [messages, setMessages] = useState<Message[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        loadMessages();
+    }, []);
+
+    const loadMessages = async () => {
+        try {
+            const result = await apiRequest('/sent', userId);
+            setMessages(result.data || []);
+        } catch (err: any) {
+            alert('Hiba: ' + err.message);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const deleteMsg = async (id: number) => {
+        if (!confirm('Törlöd?')) return;
+        try {
+            await apiRequest(`/messages?id=${id}`, userId, { method: 'DELETE' });
+            setMessages(messages.filter(m => m.id !== id));
+        } catch (err: any) {
+            alert('Hiba: ' + err.message);
+        }
+    };
+
+    if (loading) {
+        return <div className="text-center py-12 text-gray-600">Betöltés...</div>;
+    }
+
+    return (
+        <div>
+            <h2 className="text-2xl font-bold mb-6 mt-32">Elküldött üzenetek</h2>
+            {messages.length === 0 ? (
+                <div className='flex flex-col items-center justify-center'>
+                    <Send size={48} />
+                    <p className='font-semibold text-xl'>Még nem küldtél üzenetet</p>
+                </div>
+            ) : (
+                <div className="space-y-2">
+                    {messages.map((msg) => (
+                        <Card key={msg.id}>
+                            <CardHeader>
+                                <CardTitle>
+                                    {msg.receiver_name || msg.receiver_email}
+                                    {msg.is_read && <span className="bg-green-100 text-green-700 text-xs px-2 py-1 rounded">ELOLVASVA</span>}
+                                </CardTitle>
+                                <CardDescription>{msg.subject}</CardDescription>
+                                <CardAction>
+                                    <Button
+                                        size='icon'
+                                        className='from-destructive via-destructive/60 to-destructive focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40 bg-transparent bg-gradient-to-r [background-size:200%_auto] text-white hover:bg-transparent hover:bg-[99%_center]'
+                                        onClick={() => deleteMsg(msg.id)}
+                                    >
+                                        <Trash2 />
+                                        <span className='sr-only'>Delete</span>
+                                    </Button>
+                                </CardAction>
+                            </CardHeader>
+                            <CardContent>
+                                <p>{msg.content}</p>
+                            </CardContent>
+                            <CardFooter>
+                                <p className="text-xs text-gray-500">{new Date(msg.sent_at).toLocaleString('hu-HU')}</p>
+                            </CardFooter>
+                        </Card>
+                    ))}
+                </div>
+            )}
+        </div>
+    );
+}
+
 export function Home() {
     const [userId, setUserId] = useState('');
     const [synced, setSynced] = useState(false);
@@ -264,7 +340,7 @@ export function Home() {
                             <TabsTrigger value="sent">Elküldött üzenetek</TabsTrigger>
                         </TabsList>
                         <TabsContent value="inbox"><InboxTab userId={userId} /></TabsContent>
-                        <TabsContent value="sent">Ide jönnek az elküldött üzenetek</TabsContent>
+                        <TabsContent value="sent"><SentTab userId={userId} /></TabsContent>
                     </Tabs>
                 </div>
             </SignedIn>
