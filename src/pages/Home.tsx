@@ -58,7 +58,7 @@ function InboxTab({ userId }: { userId: string }) {
 
     const loadMessages = async () => {
         try {
-            const result = await apiRequest('/inbox', userId);
+            const result = await apiRequest('/messages/inbox', userId);
             setMessages(result.data || []);
         } catch (err: any) {
             alert('Hiba: ' + err.message);
@@ -215,7 +215,7 @@ function SentTab({ userId }: { userId: string }) {
 
     const loadMessages = async () => {
         try {
-            const result = await apiRequest('/sent', userId);
+            const result = await apiRequest('/messages/sent', userId);
             setMessages(result.data || []);
         } catch (err: any) {
             alert('Hiba: ' + err.message);
@@ -306,7 +306,7 @@ export function Home() {
         const syncUser = async () => {
             if (userId && !synced) {
                 try {
-                    await apiRequest('/sync', userId, {
+                    await apiRequest('/users/sync', userId, {
                         method: 'POST',
                         body: JSON.stringify({ userId, email: userId, full_name: '' }),
                     });
