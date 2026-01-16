@@ -18,7 +18,7 @@ async function apiRequest(endpoint: string, userId: string, options: any = {}) {
         ...options,
         headers: {
             'Content-Type': 'application/json',
-            'x-user-id': userId,
+            ...(userId && { 'x-user-id': userId }),
             ...options.headers,
         },
     });
