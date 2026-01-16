@@ -8,16 +8,7 @@ export function Home() {
     return (
         <>
             <SignedIn>
-                <div
-                    style={{
-                        display: 'flex',
-                        flexDirection: 'column',
-                        justifyContent: 'center',
-                        alignItems: 'center',
-                        minHeight: '100vh',
-                        gap: '2rem',
-                    }}
-                >
+                <div className='flex flex-col justify-center items-center min-h-screen gap-8'>
                     <div style={{ textAlign: 'center' }}>
                         <h1>Welcome!</h1>
                         <p>You're successfully authenticated.</p>
