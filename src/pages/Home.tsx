@@ -62,8 +62,10 @@ function InboxTab({ userId }: { userId: string }) {
     const [sending, setSending] = useState(false);
 
     useEffect(() => {
-        loadMessages();
-    }, []);
+        if (userId) {
+            loadMessages();
+        }
+    }, [userId]);
 
     const loadMessages = async () => {
         try {
@@ -219,8 +221,10 @@ function SentTab({ userId }: { userId: string }) {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        loadMessages();
-    }, []);
+        if (userId) {
+            loadMessages();
+        }
+    }, [userId]);
 
     const loadMessages = async () => {
         try {
