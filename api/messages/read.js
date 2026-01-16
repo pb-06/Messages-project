@@ -1,6 +1,6 @@
 /**
- * endpoint: /api/messages/inbox
- * GET - Beérkezett üzenetek lekérése
+ * endpoint: /api/messages/read
+ * PATCH - Üzenet olvasottnak jelölése
  */
 import { Pool } from '@neondatabase/serverless';
 
@@ -11,37 +11,41 @@ export default async function handler(req, res) {
     let data = [];
     let error = null;
 
-    // Csak GET metódus
-    if (req.method !== 'GET') {
+    // Csak PATCH metódus
+    if (req.method !== 'PATCH') {
         return res.status(405).json({ error: 'Method not allowed' });
     }
 
     try {
-        // User ID lekérése a header-ből vagy query-ből
         const userId = req.headers['x-user-id'] || req.query.userId;
+        const messageId = req.query.id || req.body.id;
 
         if (!userId) {
             return res.status(401).json({ error: 'User ID hiányzik' });
         }
 
+        if (!messageId) {
+            return res.status(400).json({ error: 'Üzenet ID hiányzik' });
+        }
+
         sql = `
-      SELECT 
-        m.*,
-        s.id as sender_id,
-        s.email as sender_email,
-        s.full_name as sender_name
-      FROM messages m
-      LEFT JOIN users s ON m.sender_id = s.id
-      WHERE m.receiver_id = $1
-      ORDER BY m.sent_at DESC
+      UPDATE messages
+      SET is_read = true, read_at = CURRENT_TIMESTAMP
+      WHERE id = $1 AND receiver_id = $2
+      RETURNING *
     `;
 
-        const result = await pool.query(sql, [userId]);
+        const result = await pool.query(sql, [messageId, userId]);
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({ error: 'Üzenet nem található' });
+        }
+
         data = result.rows;
 
         return res.status(200).json({ sql, data, error });
     } catch (err) {
-        console.error('Inbox error:', err);
+        console.error('Mark as read error:', err);
         error = err.message;
         return res.status(500).json({ sql, data, error });
     }
