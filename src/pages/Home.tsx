@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 import { RedirectToSignIn, SignedIn, UserButton } from '@neondatabase/neon-js/auth/react/ui';
 import { authClient } from '../lib/auth';
-import { Mail, Inbox, Trash2, Send } from 'lucide-react';
+import { Mail, Inbox, Trash2, Send, Shield } from 'lucide-react';
 
 import { Dialog, DialogClose, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from "@/components/ui/dialog"
 import { Card, CardAction, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
@@ -22,9 +23,17 @@ async function apiRequest(endpoint: string, userId: string, options: any = {}) {
         },
     });
 
-    const result = await response.json();
+    const text = await response.text();
+    
+    let result;
+    try {
+        result = text ? JSON.parse(text) : {};
+    } catch (e) {
+        throw new Error(`API hiba: ${response.status} - ${text || 'Üres válasz'}`);
+    }
+
     if (!response.ok) {
-        throw new Error(result.error || 'Hiba történt');
+        throw new Error(result.error || result.message || `Hiba: ${response.status}`);
     }
     return result;
 }
@@ -284,7 +293,9 @@ function SentTab({ userId }: { userId: string }) {
 export function Home() {
     const [userId, setUserId] = useState('');
     const [fullName, setFullName] = useState('');
+    const [role, setRole] = useState('user');
     const [synced, setSynced] = useState(false);
+    const navigate = useNavigate();
 
     {/* Load user ID on mount */ }
     useEffect(() => {
@@ -308,10 +319,11 @@ export function Home() {
         const syncUser = async () => {
             if (userId && !synced) {
                 try {
-                    await apiRequest('/users/sync', userId, {
+                    const result = await apiRequest('/users/sync', userId, {
                         method: 'POST',
                         body: JSON.stringify({ userId, email: userId, full_name: fullName }),
                     });
+                    setRole(result.data?.[0]?.role || 'user');
                     setSynced(true);
                 } catch (err) {
                     console.error(err);
@@ -332,7 +344,19 @@ export function Home() {
                             <h1 className="text-2xl font-bold">Üzenetküldő</h1>
                         </div>
 
-                        <UserButton />
+                        <div className='flex items-center gap-3'>
+                            {role === 'admin' && (
+                                <Button 
+                                    variant="outline" 
+                                    onClick={() => navigate('/admin')}
+                                    className='flex items-center gap-2'
+                                >
+                                    <Shield size={18} />
+                                    Admin Panel
+                                </Button>
+                            )}
+                            <UserButton />
+                        </div>
                     </nav>
 
                     {/* Tabs */}
